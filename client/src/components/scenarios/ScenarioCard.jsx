@@ -235,7 +235,9 @@ export default function ScenarioCard({
               )}
 
               <input
-                type="number"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 value={localValue}
                 onChange={handleInputChange}
                 onBlur={handleBlur}
