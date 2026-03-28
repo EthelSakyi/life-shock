@@ -26,17 +26,15 @@ const C = {
 }
 
 // ── Fallback verdict copy ──────────────────────────────────────────
-function buildFallback(riskPercent, survivalMonths, profile) {
-  if (riskPercent === 0) return null // no scenarios yet
-  const level = riskPercent > 60 ? 'high' : riskPercent > 30 ? 'moderate' : 'low'
+function buildFallback(riskPercent, survivalMonths) {
   const months = Number(survivalMonths).toFixed(1)
-  if (level === 'high') {
-    return `With your current scenarios, ${profile.name}'s savings would last around ${months} months before hitting critical — that's a high-stress position. The single most impactful move right now is building an emergency buffer of at least 3 months of expenses.`
+  if (riskPercent > 60) {
+    return `With your current scenarios, your savings would last around ${months} months before hitting critical — that's a high-stress position. The single most impactful move right now is building an emergency buffer of at least 3 months of expenses.`
   }
-  if (level === 'moderate') {
-    return `${profile.name} has about ${months} months of runway under these scenarios — manageable but worth watching. Consider setting aside an extra $200–$300/month to strengthen your cushion before the next unexpected expense hits.`
+  if (riskPercent > 30) {
+    return `You have about ${months} months of runway under these scenarios — manageable but worth watching. Consider setting aside an extra $200–$300/month to strengthen your cushion before the next unexpected expense hits.`
   }
-  return `${profile.name} is in a solid position with ${months} months of runway — the selected scenarios don't pose an immediate threat. Keep building that buffer and you'll be well-prepared for most life shocks.`
+  return `You're in a solid position with ${months} months of runway — the selected scenarios don't pose an immediate threat. Keep building that buffer and you'll be well-prepared for most life shocks.`
 }
 
 // ── Home Dashboard ─────────────────────────────────────────────────
@@ -48,7 +46,6 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
   const [verdictLoading, setLoading] = useState(false)
   const [hasRun, setHasRun]          = useState(false)
 
-  // Called ONLY when user clicks Run
   async function handleRun() {
     if (!profile || activeScenarios.length === 0) return
 
@@ -57,15 +54,18 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
     setResults(nextResults)
     setHasRun(true)
 
-    // 2. Then call Claude for verdict
+    // 2. Clear old verdict so loading state is visible
+    setVerdict(null)
     setLoading(true)
+
+    // 3. Call Claude for new verdict
     const text = await fetchVerdict({
       profile,
       activeScenarios,
       riskPercent: nextResults.riskPercent,
       survivalMonths: nextResults.survivalMonths,
     })
-    setVerdict(text || buildFallback(nextResults.riskPercent, nextResults.survivalMonths, profile))
+    setVerdict(text || buildFallback(nextResults.riskPercent, nextResults.survivalMonths))
     setLoading(false)
   }
 
