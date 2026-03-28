@@ -1,4 +1,4 @@
-import { Briefcase, HeartPulse, Car, TrendingUp, Baby } from 'lucide-react'
+import { Briefcase, HeartPulse, Car, TrendingUp } from 'lucide-react'
 
 export const SCENARIOS = [
   {
@@ -72,19 +72,6 @@ export const SCENARIOS = [
       prefix: '$',
       suffix: '/mo',
       format: (v) => `+$${Number(v).toLocaleString()}/mo`,
-    },
-  },
-  {
-    id: 'new_baby',
-    icon: Baby,
-    label: 'Expecting a Child',
-    shortLabel: 'Child',
-    description: 'Adds childcare costs and parental leave assumptions.',
-    control: {
-      type: 'toggle',
-      field: null,
-      default: null,
-      format: () => 'On',
     },
   },
 ]

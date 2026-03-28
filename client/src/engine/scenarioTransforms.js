@@ -19,7 +19,7 @@ export function buildShockParams(scenarios = [], profile) {
 
       case 'job_loss':
         params.incomeLossPercent += 1.0
-        params.monthlyExpenseIncrease += Number(profile.expenses) * 0.05
+        params.monthlyExpenseIncrease += Number(profile.expenses) * 0.10
         params.shockDurationMonths = Math.max(
           params.shockDurationMonths,
           scenario.durationMonths ?? 3
@@ -29,6 +29,11 @@ export function buildShockParams(scenarios = [], profile) {
 
       case 'medical_emergency':
         params.lumpSumCost += Number(scenario.cost ?? 10000)
+        params.incomeLossPercent += 0.30
+        params.shockDurationMonths = Math.max(
+          params.shockDurationMonths,
+          2
+        )
         break
 
       case 'car_breakdown':
@@ -37,15 +42,6 @@ export function buildShockParams(scenarios = [], profile) {
 
       case 'rate_increase':
         params.ongoingExpenseIncrease += Number(scenario.increaseAmount ?? 300)
-        break
-
-      case 'new_baby':
-        params.ongoingExpenseIncrease += 1200
-        params.lumpSumCost += 3000  // one-time birth/setup costs
-        params.shockDurationMonths = Math.max(
-          params.shockDurationMonths,
-          2
-        )
         break
 
       default:
