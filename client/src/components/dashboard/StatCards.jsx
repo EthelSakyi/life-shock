@@ -39,16 +39,16 @@ function InfoButton({ text }) {
       {show && (
         <div style={{
           position: 'absolute',
-          bottom: 26, right: 0,
-          background: 'rgba(255,255,255,.85)',
+          top: 26, right: 0,
+          background: 'rgba(255,255,255,.95)',
           backdropFilter: 'blur(16px)',
           WebkitBackdropFilter: 'blur(16px)',
           color: '#131936',
           fontSize: 12, lineHeight: 1.65,
           padding: '10px 14px', borderRadius: 10,
-          width: 220, zIndex: 20,
+          width: 220, zIndex: 50,
           border: '1px solid rgba(19,25,54,.12)',
-          boxShadow: '0 8px 24px rgba(19,25,54,.12)',
+          boxShadow: '0 8px 24px rgba(19,25,54,.15)',
           pointerEvents: 'none',
         }}>
           {text}
