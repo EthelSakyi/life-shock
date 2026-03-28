@@ -1,21 +1,29 @@
-// client/src/components/scenarios/ScenarioCard.jsx
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 
 const C = {
-  bg:           '#ffffff',
-  bgHov:        '#f8f9ff',
-  bgActive:     '#f0f2ff',
-  border:       'rgba(19,25,54,.08)',
-  borderHov:    'rgba(19,25,54,.18)',
-  borderActive: '#7b93ff',
-  text:         '#0f1235',
-  text2:        '#4a5080',
-  text3:        '#8b91b8',
-  navy:         '#131936',
-  accent:       '#7b93ff',
-  accentLt:     'rgba(123,147,255,.12)',
-  inputBg:      '#f3f4f8',
-  inputBorder:  'rgba(19,25,54,.1)',
+  bg: '#FFFFFF',
+  bgHover: '#FBFCFF',
+  bgActive: '#F7F9FF',
+  border: 'rgba(17,28,68,0.08)',
+  borderHover: 'rgba(17,28,68,0.14)',
+  borderActive: 'rgba(111,134,255,0.42)',
+  text: '#111C44',
+  text2: '#4B587C',
+  text3: '#8591B4',
+  accent: '#6F86FF',
+  navy: '#121D49',
+  accentSoft: 'rgba(111,134,255,0.10)',
+  navySoft: 'rgba(18,29,73,0.05)',
+  inputBg: '#FFFFFF',
+  inputBorder: 'rgba(17,28,68,0.10)',
+  divider: 'rgba(17,28,68,0.06)',
+}
+
+function clampValue(value, min, max) {
+  if (Number.isNaN(value)) return min ?? 0
+  if (typeof min === 'number' && value < min) return min
+  if (typeof max === 'number' && value > max) return max
+  return value
 }
 
 export default function ScenarioCard({
@@ -29,14 +37,54 @@ export default function ScenarioCard({
   const ctrl = scenario.control
   const Icon = scenario.icon
 
-  const currentVal = activeData && ctrl.field
-    ? activeData[ctrl.field] ?? ctrl.default
-    : ctrl.default
+  const currentVal =
+    activeData && ctrl.field ? activeData[ctrl.field] : null
+
+  const [localValue, setLocalValue] = useState(
+    currentVal !== undefined && currentVal !== null ? String(currentVal) : ''
+  )
+
+  useEffect(() => {
+    setLocalValue(
+      currentVal !== undefined && currentVal !== null ? String(currentVal) : ''
+    )
+  }, [currentVal, isActive])
 
   function handleInputChange(e) {
     e.stopPropagation()
-    const val = Number(e.target.value)
-    if (!isNaN(val)) onParamChange(scenario.id, ctrl.field, val)
+    setLocalValue(e.target.value)
+  }
+
+  function handleBlur(e) {
+    e.stopPropagation()
+
+    if (localValue === '') {
+      onParamChange(scenario.id, ctrl.field, null)
+      return
+    }
+
+    let val = Number(localValue)
+
+    if (Number.isNaN(val)) {
+      onParamChange(scenario.id, ctrl.field, null)
+      setLocalValue('')
+      return
+    }
+
+    val = clampValue(val, ctrl.min, ctrl.max)
+    setLocalValue(String(val))
+    onParamChange(scenario.id, ctrl.field, val)
+  }
+
+  function getDisplayValue() {
+    if (localValue === '' || localValue === null || localValue === undefined) {
+      return 'Not set'
+    }
+
+    const numeric = Number(localValue)
+    if (Number.isNaN(numeric)) return 'Not set'
+
+    return ctrl.format ? ctrl.format(numeric) : localValue
   }
 
   return (
@@ -45,152 +93,247 @@ export default function ScenarioCard({
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       style={{
-        background: isActive ? C.bgActive : hovered ? C.bgHov : C.bg,
-        border: `1.5px solid ${
-          isActive ? C.borderActive
-          : hovered ? C.borderHov
-          : C.border
+        borderRadius: 22,
+        border: `1px solid ${
+          isActive ? C.borderActive : hovered ? C.borderHover : C.border
         }`,
-        borderRadius: 12,
-        padding: '16px 18px',
+        background: isActive ? C.bgActive : hovered ? C.bgHover : C.bg,
+        boxShadow: isActive
+          ? '0 10px 26px rgba(111,134,255,0.08)'
+          : '0 4px 14px rgba(17,28,68,0.03)',
+        transition: 'all 0.16s ease',
+        overflow: 'hidden',
         cursor: 'pointer',
-        transition: 'all .15s ease',
-        userSelect: 'none',
       }}
     >
-      {/* Main row */}
-      <div style={{
-        display: 'flex', alignItems: 'center',
-        justifyContent: 'space-between', gap: 14,
-      }}>
-        <div style={{
-          display: 'flex', alignItems: 'center',
-          gap: 14, flex: 1, minWidth: 0,
-        }}>
-
-          {/* Icon */}
-          <div style={{
-            width: 42, height: 42, borderRadius: 10, flexShrink: 0,
-            background: isActive ? C.accentLt : 'rgba(19,25,54,.05)',
-            display: 'flex', alignItems: 'center',
-            justifyContent: 'center', transition: 'all .15s',
-          }}>
-            <Icon size={19} strokeWidth={1.7}
-              color={isActive ? C.accent : C.text3} />
+      <div
+        style={{
+          padding: '16px 16px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 14,
+        }}
+      >
+        <div
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 14,
+            flex: 1,
+            minWidth: 0,
+          }}
+        >
+          <div
+            style={{
+              width: 40,
+              height: 40,
+              borderRadius: 12,
+              flexShrink: 0,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              background: isActive ? C.accentSoft : C.navySoft,
+            }}
+          >
+            <Icon
+              size={18}
+              strokeWidth={1.9}
+              color={isActive ? C.accent : C.text3}
+            />
           </div>
 
-          {/* Text */}
           <div style={{ minWidth: 0 }}>
-            <div style={{
-              fontSize: 15, fontWeight: 700,
-              color: isActive ? C.navy : C.text,
-              marginBottom: 2,
-            }}>
+            <div
+              style={{
+                fontSize: 15,
+                fontWeight: 800,
+                letterSpacing: '-0.02em',
+                color: C.text,
+                marginBottom: 3,
+              }}
+            >
               {scenario.label}
             </div>
-            <div style={{
-              fontSize: 12, color: C.text3,
-              lineHeight: 1.4,
-            }}>
+
+            <div
+              style={{
+                fontSize: 12.5,
+                lineHeight: 1.45,
+                color: C.text3,
+              }}
+            >
               {scenario.description}
             </div>
           </div>
         </div>
 
-        {/* Checkbox */}
-        <div style={{
-          width: 22, height: 22, borderRadius: 6, flexShrink: 0,
-          border: `1.5px solid ${isActive ? C.accent : 'rgba(19,25,54,.2)'}`,
-          background: isActive ? C.accent : 'transparent',
-          display: 'flex', alignItems: 'center',
-          justifyContent: 'center', transition: 'all .15s',
-        }}>
+        <div
+          style={{
+            width: 22,
+            height: 22,
+            borderRadius: 999,
+            flexShrink: 0,
+            border: `1.5px solid ${isActive ? C.navy : 'rgba(17,28,68,0.18)'}`,
+            background: isActive ? C.navy : 'transparent',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            transition: 'all 0.16s ease',
+          }}
+        >
           {isActive && (
-            <svg width="12" height="10" viewBox="0 0 12 10" fill="none">
-              <path d="M1 4.5L4.5 8L11 1" stroke="#fff"
-                strokeWidth="1.8" strokeLinecap="round"
-                strokeLinejoin="round" />
-            </svg>
+            <div
+              style={{
+                width: 7,
+                height: 7,
+                borderRadius: '50%',
+                background: '#FFFFFF',
+              }}
+            />
           )}
         </div>
       </div>
 
-      {/* Input — shown when active */}
       {isActive && ctrl.type !== 'toggle' && (
         <div
           onClick={(e) => e.stopPropagation()}
           style={{
-            marginTop: 14, padding: '12px 14px',
-            background: '#fff',
-            border: `1px solid ${C.inputBorder}`,
-            borderRadius: 10,
+            padding: '0 16px 16px',
           }}
         >
-          <div style={{
-            fontSize: 11, fontWeight: 600, color: C.text3,
-            textTransform: 'uppercase', letterSpacing: '0.07em',
-            marginBottom: 8,
-          }}>
-            {ctrl.label}
-          </div>
-          <div style={{
-            display: 'flex', alignItems: 'center',
-            background: C.inputBg,
-            border: `1px solid ${C.inputBorder}`,
-            borderRadius: 8, height: 44, overflow: 'hidden',
-          }}>
-            {ctrl.type === 'money' && (
-              <div style={{
-                padding: '0 14px', fontSize: 15, color: C.text3,
-                borderRight: `1px solid ${C.inputBorder}`,
-                height: '100%', display: 'flex',
-                alignItems: 'center',
-                background: 'rgba(19,25,54,.04)',
-                fontWeight: 700, flexShrink: 0,
-              }}>
-                $
+          <div
+            style={{
+              borderTop: `1px solid ${C.divider}`,
+              paddingTop: 13,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 12,
+            }}
+          >
+            <div style={{ minWidth: 0 }}>
+              <div
+                style={{
+                  fontSize: 11,
+                  fontWeight: 800,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.10em',
+                  color: C.text3,
+                  marginBottom: 5,
+                }}
+              >
+                {ctrl.label}
               </div>
-            )}
-            <input
-              type="number"
-              min={ctrl.min ?? 0}
-              max={ctrl.max}
-              value={currentVal ?? ctrl.default}
-              onChange={handleInputChange}
-              placeholder={ctrl.placeholder}
+
+              <div
+                style={{
+                  fontSize: 12,
+                  color: C.text2,
+                  fontWeight: 600,
+                }}
+              >
+                {getDisplayValue()}
+              </div>
+            </div>
+
+            <div
               style={{
-                flex: 1, background: 'transparent',
-                border: 'none', outline: 'none',
-                padding: '0 14px', fontSize: 16,
-                fontWeight: 700, color: C.navy,
-                fontFamily: 'inherit', height: '100%',
-              }}
-            />
-            {ctrl.suffix && (
-              <div style={{
-                padding: '0 14px', fontSize: 12,
-                color: C.text3, flexShrink: 0,
-                borderLeft: `1px solid ${C.inputBorder}`,
-                height: '100%', display: 'flex',
+                height: 42,
+                minWidth: 122,
+                display: 'flex',
                 alignItems: 'center',
-                background: 'rgba(19,25,54,.04)',
-                fontWeight: 600,
-              }}>
-                {ctrl.suffix}
-              </div>
-            )}
+                background: C.inputBg,
+                border: `1px solid ${C.inputBorder}`,
+                borderRadius: 12,
+                overflow: 'hidden',
+                flexShrink: 0,
+                boxShadow: '0 2px 8px rgba(17,28,68,0.03)',
+              }}
+            >
+              {ctrl.prefix && (
+                <div
+                  style={{
+                    padding: '0 12px',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    borderRight: `1px solid ${C.inputBorder}`,
+                    background: '#F8FAFF',
+                    color: C.text3,
+                    fontSize: 13,
+                    fontWeight: 700,
+                  }}
+                >
+                  {ctrl.prefix}
+                </div>
+              )}
+
+              <input
+                type="number"
+                value={localValue}
+                min={ctrl.min}
+                max={ctrl.max}
+                onChange={handleInputChange}
+                onBlur={handleBlur}
+                onClick={(e) => e.stopPropagation()}
+                placeholder=""
+                style={{
+                  width: 74,
+                  height: '100%',
+                  border: 'none',
+                  outline: 'none',
+                  background: 'transparent',
+                  color: C.navy,
+                  fontSize: 15,
+                  fontWeight: 800,
+                  textAlign: 'center',
+                  fontFamily: 'inherit',
+                  appearance: 'textfield',
+                  MozAppearance: 'textfield',
+                }}
+              />
+
+              {ctrl.suffix && (
+                <div
+                  style={{
+                    padding: '0 12px',
+                    height: '100%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    borderLeft: `1px solid ${C.inputBorder}`,
+                    background: '#F8FAFF',
+                    color: C.text3,
+                    fontSize: 12,
+                    fontWeight: 700,
+                  }}
+                >
+                  {ctrl.suffix}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
 
-      {/* Toggle info — new baby */}
       {isActive && ctrl.type === 'toggle' && (
-        <div style={{
-          marginTop: 12, padding: '10px 12px',
-          background: C.accentLt, borderRadius: 8,
-          fontSize: 13, color: C.text2, lineHeight: 1.5,
-        }}>
-          Adds $1,200/month in expenses and models 3 months of parental leave.
+        <div
+          style={{
+            padding: '0 16px 16px',
+          }}
+        >
+          <div
+            style={{
+              borderTop: `1px solid ${C.divider}`,
+              paddingTop: 13,
+              fontSize: 12.5,
+              lineHeight: 1.55,
+              color: C.text2,
+            }}
+          >
+            Estimates <strong>$1,200/month</strong> in added costs and
+            <strong> 3 months</strong> of parental leave.
+          </div>
         </div>
       )}
     </div>

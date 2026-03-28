@@ -1,24 +1,25 @@
-// client/src/components/scenarios/ActiveScenarioChips.jsx
 import React from 'react'
 import { SCENARIOS } from '../../data/scenarioConfig'
 
 const C = {
-  chipBg:     'rgba(19,25,54,.06)',
-  chipBorder: 'rgba(19,25,54,.15)',
-  navy:       '#131936',
-  text2:      '#4a5080',
-  text3:      '#8b91b8',
-  accent:     '#7b93ff',
+  chipBg: '#F7F9FF',
+  chipBorder: 'rgba(17,28,68,0.08)',
+  text2: '#8591B4',
+  accent: '#6F86FF',
 }
 
 export default function ActiveScenarioChips({ activeScenarios, onRemove }) {
   if (!activeScenarios.length) return null
 
   return (
-    <div style={{
-      display: 'flex', flexWrap: 'wrap',
-      gap: 8, marginBottom: 16,
-    }}>
+    <div
+      style={{
+        display: 'flex',
+        flexWrap: 'wrap',
+        gap: 8,
+        marginBottom: 14,
+      }}
+    >
       {activeScenarios.map((active) => {
         const config = SCENARIOS.find((s) => s.id === active.id)
         if (!config) return null
@@ -26,41 +27,60 @@ export default function ActiveScenarioChips({ activeScenarios, onRemove }) {
         const Icon = config.icon
         const ctrl = config.control
         const val = ctrl.field ? active[ctrl.field] : null
-        const valLabel = val !== null && val !== undefined && ctrl.format
-          ? ctrl.format(val)
-          : null
+
+        let valLabel = null
+        if (val !== null && val !== undefined && val !== '' && ctrl.format) {
+          valLabel = ctrl.format(val)
+        }
 
         return (
-          <div key={active.id} style={{
-            display: 'flex', alignItems: 'center', gap: 6,
-            background: C.chipBg,
-            border: `1px solid ${C.chipBorder}`,
-            borderRadius: 100, padding: '5px 10px 5px 8px',
-          }}>
-            <Icon size={12} strokeWidth={2} color={C.accent} />
-            <span style={{
-              fontSize: 12, fontWeight: 600, color: C.navy,
-            }}>
-              {config.shortLabel}
-            </span>
-            {valLabel && (
-              <span style={{
-                fontSize: 11, color: C.text3,
-                fontFamily: "'DM Mono', monospace",
-              }}>
+          <div
+            key={active.id}
+            style={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: 8,
+              padding: '7px 10px',
+              borderRadius: 999,
+              background: C.chipBg,
+              border: `1px solid ${C.chipBorder}`,
+            }}
+          >
+            <Icon size={14} strokeWidth={1.9} color={C.accent} />
+
+            {valLabel ? (
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: C.text2,
+                }}
+              >
                 {valLabel}
               </span>
+            ) : (
+              <span
+                style={{
+                  fontSize: 12,
+                  fontWeight: 700,
+                  color: C.text2,
+                }}
+              >
+                On
+              </span>
             )}
+
             <button
               onClick={() => onRemove(active.id)}
-              onMouseEnter={(e) => e.currentTarget.style.color = C.navy}
-              onMouseLeave={(e) => e.currentTarget.style.color = C.text3}
               style={{
-                background: 'none', border: 'none',
-                cursor: 'pointer', color: C.text3,
-                padding: '0 0 0 2px', fontSize: 15,
-                lineHeight: 1, display: 'flex',
-                alignItems: 'center', transition: 'color .15s',
+                border: 'none',
+                background: 'transparent',
+                color: C.text2,
+                cursor: 'pointer',
+                fontSize: 15,
+                lineHeight: 1,
+                padding: 0,
+                marginLeft: 2,
               }}
             >
               ×

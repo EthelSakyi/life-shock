@@ -1,12 +1,10 @@
-// client/src/hooks/useScenarios.js
-
 import { useState, useCallback } from 'react'
 import { SCENARIOS } from '../data/scenarioConfig'
 
 function buildDefaultParams(scenario) {
   const ctrl = scenario.control
   if (ctrl.type === 'toggle') return {}
-  return { [ctrl.field]: ctrl.default }
+  return { [ctrl.field]: null }
 }
 
 export function useScenarios() {
@@ -15,19 +13,21 @@ export function useScenarios() {
   const toggleScenario = useCallback((scenarioId) => {
     setActiveScenarios((prev) => {
       const exists = prev.find((s) => s.id === scenarioId)
+
       if (exists) {
         return prev.filter((s) => s.id !== scenarioId)
       }
+
       const config = SCENARIOS.find((s) => s.id === scenarioId)
+      if (!config) return prev
+
       return [...prev, { id: scenarioId, ...buildDefaultParams(config) }]
     })
   }, [])
 
   const updateScenarioParam = useCallback((scenarioId, field, value) => {
     setActiveScenarios((prev) =>
-      prev.map((s) =>
-        s.id === scenarioId ? { ...s, [field]: value } : s
-      )
+      prev.map((s) => (s.id === scenarioId ? { ...s, [field]: value } : s))
     )
   }, [])
 
