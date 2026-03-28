@@ -47,19 +47,21 @@ export default function RiskGauge({ riskPercent = 0 }) {
             i
           </div>
 
-          {/* Tooltip — drops down from top right */}
           {showTooltip && (
             <div style={{
               position: 'absolute',
               top: 28, right: 0,
-              background: '#131936',
-              color: '#fff',
+              background: 'rgba(255,255,255,.85)',
+              backdropFilter: 'blur(16px)',
+              WebkitBackdropFilter: 'blur(16px)',
+              color: '#131936',
               fontSize: 12, lineHeight: 1.65,
               padding: '12px 16px',
               borderRadius: 12,
               width: 280,
               zIndex: 20,
-              boxShadow: '0 8px 24px rgba(0,0,0,.2)',
+              border: '1px solid rgba(19,25,54,.12)',
+              boxShadow: '0 8px 24px rgba(19,25,54,.12)',
               pointerEvents: 'none',
             }}>
               We run 1,000 simulated versions of your financial future, each with slightly different random expenses and timing. The percentage shows how many of those simulations ended with you running out of money.

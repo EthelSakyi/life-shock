@@ -40,11 +40,15 @@ function InfoButton({ text }) {
         <div style={{
           position: 'absolute',
           bottom: 26, right: 0,
-          background: '#131936', color: '#fff',
+          background: 'rgba(255,255,255,.85)',
+          backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)',
+          color: '#131936',
           fontSize: 12, lineHeight: 1.65,
           padding: '10px 14px', borderRadius: 10,
           width: 220, zIndex: 20,
-          boxShadow: '0 8px 24px rgba(0,0,0,.2)',
+          border: '1px solid rgba(19,25,54,.12)',
+          boxShadow: '0 8px 24px rgba(19,25,54,.12)',
           pointerEvents: 'none',
         }}>
           {text}
