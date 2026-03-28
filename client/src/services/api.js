@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL || 'http://localhost:3001'
+const BASE = import.meta.env.VITE_API_URL || 'http://localhost:5050'
 
 /**
  * Fetches the verdict card text from Claude via Express.

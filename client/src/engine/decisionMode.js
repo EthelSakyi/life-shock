@@ -1,90 +1,48 @@
-// client/src/engine/decisionMode.js
+import React, { useState } from 'react'
+import { useScenarios } from '../../hooks/useScenarios'
+import CanIAffordThis from './CanIAffordThis'
+import MakeMeSafer from './MakeMeSafer'
 
-import { runSimulation } from './monteCarlo.js'
-import { SAFE_RISK_THRESHOLD } from './thresholds.js'
+const navy = '#131936'
+const C = { border: 'rgba(17,28,68,.08)' }
+const TABS = { AFFORD: 'afford', SAFER: 'safer' }
 
-// ─── Can I Afford This? ────────────────────────────────────
-// Returns before/after comparison when a one-time cost is applied
+export default function DecisionMode({ profile }) {
+  const [tab, setTab] = useState(TABS.AFFORD)
 
-export function canIAffordThis(profile, scenarios = [], oneTimeCost = 0) {
-  if (!profile) return null
-  if (oneTimeCost <= 0) return null
+  const { activeScenarios } = useScenarios()
 
-  // run baseline simulation
-  const before = runSimulation(profile, scenarios)
+  return (
+    <div style={{ fontFamily: "'Plus Jakarta Sans', sans-serif" }}>
+      <div style={{
+        background: '#fff', border: `0.5px solid ${C.border}`,
+        borderRadius: 12, padding: 4,
+        display: 'inline-flex', marginBottom: 20,
+      }}>
+        <button
+          onClick={() => setTab(TABS.AFFORD)}
+          style={{
+            padding: '10px 28px', borderRadius: 8,
+            background: tab === TABS.AFFORD ? navy : 'transparent',
+            color: tab === TABS.AFFORD ? '#fff' : 'rgba(19,25,54,.4)',
+            fontSize: 13, fontWeight: tab === TABS.AFFORD ? 700 : 600,
+            fontFamily: 'inherit', border: 'none', cursor: 'pointer', transition: 'all .2s',
+          }}
+        >Can I afford this?</button>
+        <button
+          onClick={() => setTab(TABS.SAFER)}
+          style={{
+            padding: '10px 28px', borderRadius: 8,
+            background: tab === TABS.SAFER ? navy : 'transparent',
+            color: tab === TABS.SAFER ? '#fff' : 'rgba(19,25,54,.4)',
+            fontSize: 13, fontWeight: tab === TABS.SAFER ? 700 : 600,
+            fontFamily: 'inherit', border: 'none', cursor: 'pointer', transition: 'all .2s',
+          }}
+        >Make me safer</button>
+      </div>
 
-  // deduct one-time cost from savings and rerun
-  const adjustedProfile = {
-    ...profile,
-    savings: Math.max(profile.savings - oneTimeCost, 0),
-  }
-  const after = runSimulation(adjustedProfile, scenarios)
-
-  return {
-    before: {
-      riskPercent: before.riskPercent,
-      survivalMonths: before.survivalMonths,
-    },
-    after: {
-      riskPercent: after.riskPercent,
-      survivalMonths: after.survivalMonths,
-    },
-    riskDelta: after.riskPercent - before.riskPercent,
-    survivalDelta:
-      Math.round((after.survivalMonths - before.survivalMonths) * 10) / 10,
-  }
-}
-
-// ─── How Much Should I Save? ───────────────────────────────
-// Reverse-calculates the savings target needed to drop
-// risk below SAFE_RISK_THRESHOLD (20%)
-
-export function howMuchToSave(profile, scenarios = []) {
-  if (!profile) return null
-
-  // run once and cache — do not run again for currentRisk
-  const initialResult = runSimulation(profile, scenarios)
-
-  if (initialResult.riskPercent <= SAFE_RISK_THRESHOLD) {
-    return {
-      currentRisk: initialResult.riskPercent,
-      targetRisk: initialResult.riskPercent,
-      alreadySafe: true,
-      targetSavings: profile.savings,
-      additionalSavingsNeeded: 0,
-    }
-  }
-
-  // increment savings by $500 per step until risk drops below threshold
-  // capped at 100 iterations ($50,000 search range) to prevent freeze
-  let testSavings = profile.savings
-  let result = initialResult
-  const MAX_STEPS = 100
-  let steps = 0
-
-  while (
-    result.riskPercent > SAFE_RISK_THRESHOLD &&
-    steps < MAX_STEPS
-  ) {
-    testSavings += 500
-    result = runSimulation(
-      { ...profile, savings: testSavings },
-      scenarios
-    )
-    steps++
-  }
-
-  return {
-    currentRisk: initialResult.riskPercent,   // from cached run
-    targetRisk: result.riskPercent,
-    alreadySafe: false,
-    targetSavings: testSavings,
-    additionalSavingsNeeded: testSavings - profile.savings,
-    monthsToSaveAt400: Math.ceil(
-      (testSavings - profile.savings) / 400
-    ),
-    monthsToSaveAt200: Math.ceil(
-      (testSavings - profile.savings) / 200
-    ),
-  }
+      {tab === TABS.AFFORD && <CanIAffordThis profile={profile} activeScenarios={activeScenarios} />}
+      {tab === TABS.SAFER  && <MakeMeSafer   profile={profile} activeScenarios={activeScenarios} />}
+    </div>
+  )
 }
