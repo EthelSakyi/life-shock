@@ -1,9 +1,11 @@
-// client/src/App.jsx
-
-export default function App() {
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <h1 className="text-2xl font-bold p-8">LifeShock</h1>
-    </div>
-  )
-}
+// Matches the profile schema expected by runSimulation(profile, scenarios)
+export const DEMO_PROFILE = {
+  name: 'Alex',
+  age: 27,
+  email: '',
+  income: 4300,
+  expenses: 3200,
+  savings: 18000,
+  debt: 250,
+  employment: 'employed',
+};
