@@ -1,8 +1,9 @@
-import React, { useState } from 'react'
-import { BarChart3 } from 'lucide-react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { AlertTriangle, BarChart3, ShieldCheck, TrendingDown } from 'lucide-react'
 import { useProfile } from './hooks/useProfile'
 import { useScenarios } from './hooks/useScenarios'
 import { storage } from './services/storage'
+import { runSimulation } from './engine/monteCarlo'
 import WelcomeScreen from './components/onboarding/WelcomeScreen'
 import ProfileForm from './components/onboarding/ProfileForm'
 import ReturningUserCard from './components/onboarding/ReturningUserCard'
@@ -19,9 +20,92 @@ const C = {
   accent2: '#8CA4FF',
   accentSoft: 'rgba(111,134,255,0.10)',
   accentGlow: 'rgba(111,134,255,0.18)',
-  navy: '#121D49',
+  navy: '#131936',
   navBg: 'rgba(255,255,255,0.72)',
   navBorder: 'rgba(17,28,68,0.06)',
+  success: '#1A7F5A',
+  successSoft: 'rgba(26,127,90,0.10)',
+  warning: '#B26A00',
+  warningSoft: 'rgba(178,106,0,0.10)',
+  danger: '#B42318',
+  dangerSoft: 'rgba(180,35,24,0.10)',
+}
+
+function getRiskBand(riskPercent) {
+  if (riskPercent <= 20) {
+    return {
+      label: 'Low risk',
+      color: C.success,
+      bg: C.successSoft,
+      icon: ShieldCheck,
+    }
+  }
+
+  if (riskPercent <= 50) {
+    return {
+      label: 'Moderate risk',
+      color: C.warning,
+      bg: C.warningSoft,
+      icon: AlertTriangle,
+    }
+  }
+
+  return {
+    label: 'High risk',
+    color: C.danger,
+    bg: C.dangerSoft,
+    icon: TrendingDown,
+  }
+}
+
+function StatCard({ title, value, subtext }) {
+  return (
+    <div
+      style={{
+        padding: '18px 18px 16px',
+        borderRadius: 20,
+        background: '#FFFFFF',
+        border: `1px solid ${C.border}`,
+        boxShadow: '0 8px 22px rgba(17,28,68,0.04)',
+      }}
+    >
+      <div
+        style={{
+          fontSize: 11,
+          fontWeight: 800,
+          textTransform: 'uppercase',
+          letterSpacing: '0.10em',
+          color: C.text3,
+          marginBottom: 10,
+        }}
+      >
+        {title}
+      </div>
+
+      <div
+        style={{
+          fontSize: 32,
+          lineHeight: 1,
+          fontWeight: 800,
+          letterSpacing: '-0.04em',
+          color: C.navy,
+          marginBottom: 8,
+        }}
+      >
+        {value}
+      </div>
+
+      <div
+        style={{
+          fontSize: 13,
+          lineHeight: 1.5,
+          color: C.text3,
+        }}
+      >
+        {subtext}
+      </div>
+    </div>
+  )
 }
 
 function HomeDashboard({ profile, scenarios, onSignOut }) {
@@ -32,6 +116,23 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
     removeScenario,
     isActive,
   } = scenarios
+
+  const [results, setResults] = useState(() =>
+    runSimulation(profile, [])
+  )
+
+  useEffect(() => {
+    if (!profile) return
+    const nextResults = runSimulation(profile, activeScenarios)
+    setResults(nextResults)
+  }, [profile, activeScenarios])
+
+  const riskBand = useMemo(
+    () => getRiskBand(results?.riskPercent ?? 0),
+    [results]
+  )
+
+  const RiskIcon = riskBand.icon
 
   return (
     <div
@@ -222,86 +323,289 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
                 zIndex: 1,
                 width: '100%',
                 height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
                 padding: 24,
                 boxSizing: 'border-box',
+                overflowY: 'auto',
               }}
             >
               <div
                 style={{
-                  width: 'min(470px, 100%)',
-                  padding: '34px 28px',
-                  borderRadius: 26,
-                  border: `1px solid ${C.border}`,
-                  background: 'rgba(255,255,255,0.74)',
-                  textAlign: 'center',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  boxShadow: '0 12px 30px rgba(17,28,68,0.05)',
+                  maxWidth: 920,
+                  margin: '0 auto',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: 18,
                 }}
               >
                 <div
                   style={{
-                    width: 64,
-                    height: 64,
-                    margin: '0 auto 16px',
-                    borderRadius: 20,
-                    background: `linear-gradient(135deg, ${C.accentSoft}, rgba(255,255,255,0.98))`,
-                    border: `1px solid ${C.accentGlow}`,
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
+                    padding: '24px 24px 22px',
+                    borderRadius: 28,
+                    background: 'rgba(255,255,255,0.76)',
+                    border: `1px solid ${C.border}`,
+                    backdropFilter: 'blur(10px)',
+                    WebkitBackdropFilter: 'blur(10px)',
+                    boxShadow: '0 12px 30px rgba(17,28,68,0.05)',
                   }}
                 >
-                  <BarChart3 size={28} color={C.navy} />
-                </div>
-
-                <div
-                  style={{
-                    fontSize: 22,
-                    fontWeight: 800,
-                    letterSpacing: '-0.03em',
-                    color: C.navy,
-                    marginBottom: 8,
-                  }}
-                >
-                  Results dashboard
-                </div>
-
-                <div
-                  style={{
-                    fontSize: 14,
-                    lineHeight: 1.6,
-                    color: C.text3,
-                    maxWidth: 320,
-                    margin: '0 auto',
-                  }}
-                >
-                  This panel will display your live simulation results.
-                </div>
-
-                {activeScenarios.length > 0 && (
                   <div
                     style={{
-                      marginTop: 18,
-                      display: 'inline-flex',
-                      alignItems: 'center',
-                      gap: 8,
-                      padding: '9px 14px',
-                      borderRadius: 999,
-                      background: 'rgba(18,29,73,0.06)',
-                      border: `1px solid ${C.accentGlow}`,
-                      color: C.navy,
-                      fontSize: 13,
-                      fontWeight: 700,
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      justifyContent: 'space-between',
+                      gap: 16,
+                      marginBottom: 22,
                     }}
                   >
-                    {activeScenarios.length} active scenario
-                    {activeScenarios.length > 1 ? 's' : ''}
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 13,
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.10em',
+                          color: C.text3,
+                          marginBottom: 8,
+                        }}
+                      >
+                        Results dashboard
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: 30,
+                          lineHeight: 1.05,
+                          letterSpacing: '-0.04em',
+                          fontWeight: 800,
+                          color: C.navy,
+                          marginBottom: 10,
+                        }}
+                      >
+                        Your resilience snapshot
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: 14,
+                          lineHeight: 1.6,
+                          color: C.text3,
+                          maxWidth: 520,
+                        }}
+                      >
+                        Results rerun automatically every time you add, remove,
+                        or edit a scenario.
+                      </div>
+                    </div>
+
+                    <div
+                      style={{
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: 8,
+                        padding: '10px 14px',
+                        borderRadius: 999,
+                        background: riskBand.bg,
+                        color: riskBand.color,
+                        border: `1px solid ${C.border}`,
+                        fontSize: 13,
+                        fontWeight: 800,
+                        whiteSpace: 'nowrap',
+                      }}
+                    >
+                      <RiskIcon size={16} />
+                      {riskBand.label}
+                    </div>
                   </div>
-                )}
+
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: 'repeat(3, minmax(0, 1fr))',
+                      gap: 14,
+                    }}
+                  >
+                    <StatCard
+                      title="Risk of shortfall"
+                      value={`${results?.riskPercent ?? 0}%`}
+                      subtext="Estimated share of simulation runs that fall into financial distress."
+                    />
+
+                    <StatCard
+                      title="Survival window"
+                      value={`${results?.survivalMonths ?? 12} mo`}
+                      subtext="Median number of months your finances stay above the threshold."
+                    />
+
+                    <StatCard
+                      title="Scenarios active"
+                      value={activeScenarios.length}
+                      subtext="Live count of selected life events currently affecting the model."
+                    />
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    display: 'grid',
+                    gridTemplateColumns: '1.3fr 1fr',
+                    gap: 18,
+                  }}
+                >
+                  <div
+                    style={{
+                      padding: '20px 22px',
+                      borderRadius: 24,
+                      background: '#FFFFFF',
+                      border: `1px solid ${C.border}`,
+                      boxShadow: '0 8px 22px rgba(17,28,68,0.04)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.10em',
+                        color: C.text3,
+                        marginBottom: 12,
+                      }}
+                    >
+                      Scenario effect
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 15,
+                        lineHeight: 1.7,
+                        color: C.text2,
+                      }}
+                    >
+                      {activeScenarios.length === 0 ? (
+                        'No shock scenarios selected yet. Your current profile is being simulated as the baseline case.'
+                      ) : (
+                        <>
+                          You are testing <strong style={{ color: C.navy }}>{activeScenarios.length}</strong>{' '}
+                          active scenario{activeScenarios.length > 1 ? 's' : ''}. The engine is already rerunning on every change and updating this panel instantly.
+                        </>
+                      )}
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      padding: '20px 22px',
+                      borderRadius: 24,
+                      background: '#FFFFFF',
+                      border: `1px solid ${C.border}`,
+                      boxShadow: '0 8px 22px rgba(17,28,68,0.04)',
+                    }}
+                  >
+                    <div
+                      style={{
+                        fontSize: 12,
+                        fontWeight: 800,
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.10em',
+                        color: C.text3,
+                        marginBottom: 12,
+                      }}
+                    >
+                      Ruin threshold
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 28,
+                        lineHeight: 1,
+                        fontWeight: 800,
+                        letterSpacing: '-0.04em',
+                        color: C.navy,
+                        marginBottom: 8,
+                      }}
+                    >
+                      ${Math.round(results?.ruinThreshold ?? 0).toLocaleString()}
+                    </div>
+
+                    <div
+                      style={{
+                        fontSize: 13,
+                        lineHeight: 1.6,
+                        color: C.text3,
+                      }}
+                    >
+                      This threshold is currently tied to one month of expenses in your engine settings.
+                    </div>
+                  </div>
+                </div>
+
+                <div
+                  style={{
+                    padding: '20px 22px',
+                    borderRadius: 24,
+                    background: '#FFFFFF',
+                    border: `1px solid ${C.border}`,
+                    boxShadow: '0 8px 22px rgba(17,28,68,0.04)',
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: 10,
+                      marginBottom: 12,
+                    }}
+                  >
+                    <div
+                      style={{
+                        width: 42,
+                        height: 42,
+                        borderRadius: 14,
+                        background: `linear-gradient(135deg, ${C.accentSoft}, rgba(255,255,255,0.98))`,
+                        border: `1px solid ${C.accentGlow}`,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                      }}
+                    >
+                      <BarChart3 size={20} color={C.navy} />
+                    </div>
+
+                    <div>
+                      <div
+                        style={{
+                          fontSize: 12,
+                          fontWeight: 800,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.10em',
+                          color: C.text3,
+                          marginBottom: 4,
+                        }}
+                      >
+                        Live engine status
+                      </div>
+
+                      <div
+                        style={{
+                          fontSize: 16,
+                          fontWeight: 800,
+                          color: C.navy,
+                        }}
+                      >
+                        Connected
+                      </div>
+                    </div>
+                  </div>
+
+                  <div
+                    style={{
+                      fontSize: 14,
+                      lineHeight: 1.7,
+                      color: C.text2,
+                    }}
+                  >
+                    This results panel is now connected to your simulation engine and updates automatically whenever the selected scenarios change.
+                  </div>
+                </div>
               </div>
             </div>
           </section>
