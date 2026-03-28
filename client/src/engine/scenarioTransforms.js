@@ -41,8 +41,7 @@ export function buildShockParams(scenarios = [], profile) {
         break
 
       case 'rate_increase':
-        params.ongoingExpenseIncrease +=
-          profile.expenses * ((scenario.increasePercent ?? 20) / 100)
+        params.ongoingExpenseIncrease += scenario.increaseAmount ?? 300
         break
 
       case 'new_baby':

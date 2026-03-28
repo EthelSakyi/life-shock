@@ -1,120 +1,215 @@
 // client/src/App.jsx
-import React, { useState } from 'react';
-import { useProfile } from './hooks/useProfile';
-import { storage } from './services/storage';
-import WelcomeScreen     from './components/onboarding/WelcomeScreen';
-import ProfileForm       from './components/onboarding/ProfileForm';
-import ReturningUserCard from './components/onboarding/ReturningUserCard';
+import React, { useState } from 'react'
+import { useProfile }    from './hooks/useProfile'
+import { useScenarios }  from './hooks/useScenarios'
+import { storage }       from './services/storage'
+import WelcomeScreen     from './components/onboarding/WelcomeScreen'
+import ProfileForm       from './components/onboarding/ProfileForm'
+import ReturningUserCard from './components/onboarding/ReturningUserCard'
+import ScenarioControls  from './components/scenarios/ScenarioControls'
 
-// ─── Phase 4 placeholder ──────────────────────────────────────────
-function HomeDashboard({ profile, onSignOut }) {
+function HomeDashboard({ profile, scenarios, onSignOut }) {
+  const {
+    activeScenarios,
+    toggleScenario,
+    updateScenarioParam,
+    removeScenario,
+    isActive,
+  } = scenarios
+
   return (
     <div style={{
-      minHeight: '100vh', background: '#f8f9ff', color: '#0f1235',
-      display: 'flex', alignItems: 'center', justifyContent: 'center',
-      flexDirection: 'column', gap: 12, fontFamily: 'inherit', padding: 24,
+      minHeight: '100vh',
+      background: '#f0f2f8',
+      fontFamily: "'Plus Jakarta Sans', sans-serif",
+      display: 'flex',
+      flexDirection: 'column',
     }}>
-      <div style={{ fontSize: 24, fontWeight: 800, letterSpacing: '-0.5px', marginBottom: 8 }}>
-        Life<span style={{ color: '#131936' }}>Shock</span>
-      </div>
-      <h1 style={{ fontSize: 32, fontWeight: 800, letterSpacing: '-1px', color: '#0f1235', textAlign: 'center' }}>
-        Hi {profile.name}, what would you like to do?
-      </h1>
-      <p style={{ color: '#8b91b8', fontSize: 14 }}>Phase 4 home dashboard coming soon</p>
-      <p style={{ color: '#b0b5d0', fontSize: 12, fontFamily: "'DM Mono', monospace" }}>
-        income: ${Number(profile.income).toLocaleString()} &nbsp;|&nbsp;
-        expenses: ${Number(profile.expenses).toLocaleString()} &nbsp;|&nbsp;
-        savings: ${Number(profile.savings).toLocaleString()}
-      </p>
-      <button onClick={onSignOut} style={{
-        marginTop: 16, padding: '10px 28px', borderRadius: 100,
-        background: '#131936', color: '#fff', border: 'none', cursor: 'pointer',
-        fontFamily: 'inherit', fontSize: 13, fontWeight: 600,
-        boxShadow: '0 2px 10px rgba(19,25,54,.2)',
+
+      {/* Navbar — translucent, matches WelcomeScreen exactly */}
+      <nav style={{
+        position: 'sticky', top: 0, zIndex: 10,
+        display: 'flex', alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '0 40px', height: 68,
+        background: 'rgba(19,25,54,.25)',
+        backdropFilter: 'blur(24px)',
+        WebkitBackdropFilter: 'blur(24px)',
+        borderBottom: '1px solid rgba(255,255,255,.06)',
       }}>
-        Sign out
-      </button>
+        <div style={{
+          fontSize: 20, fontWeight: 800,
+          color: '#fff', letterSpacing: '-0.5px',
+        }}>
+          Life<span style={{ color: '#7b93ff' }}>Shock</span>
+        </div>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{
+              width: 30, height: 30, borderRadius: '50%',
+              background: 'rgba(123,147,255,.25)',
+              display: 'flex', alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: 12, fontWeight: 700, color: '#7b93ff',
+            }}>
+              {profile.name?.charAt(0).toUpperCase()}
+            </div>
+            <span style={{ fontSize: 14, color: 'rgba(255,255,255,.6)', fontWeight: 500 }}>
+              {profile.name}
+            </span>
+          </div>
+          <div style={{ width: 1, height: 16, background: 'rgba(255,255,255,.1)' }} />
+          <button onClick={onSignOut} style={{
+            padding: '7px 18px', borderRadius: 100,
+            fontSize: 13, fontWeight: 600,
+            fontFamily: 'inherit', cursor: 'pointer',
+            background: 'transparent', color: 'rgba(255,255,255,.6)',
+            border: '1.5px solid rgba(255,255,255,.2)',
+            transition: 'all .15s',
+          }}>
+            Sign out
+          </button>
+        </div>
+      </nav>
+
+      {/* Full height two-column layout */}
+      <div style={{
+        flex: 1,
+        display: 'grid',
+        gridTemplateColumns: '420px 1fr',
+        gap: 0,
+        height: 'calc(100vh - 68px)',
+      }}>
+
+        {/* Left panel — full height, scrollable */}
+        <div style={{
+          background: '#ffffff',
+          borderRight: '1px solid rgba(19,25,54,.08)',
+          padding: '28px 24px',
+          overflowY: 'auto',
+          height: '100%',
+        }}>
+          <ScenarioControls
+            activeScenarios={activeScenarios}
+            onToggle={toggleScenario}
+            onParamChange={updateScenarioParam}
+            onRemove={removeScenario}
+            isActive={isActive}
+          />
+        </div>
+
+        {/* Right panel — full height */}
+        <div style={{
+          background: '#f8f9ff',
+          padding: '28px 24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          flexDirection: 'column',
+          gap: 12,
+          height: '100%',
+        }}>
+          <div style={{
+            width: 52, height: 52, borderRadius: 14,
+            background: 'rgba(123,147,255,.1)',
+            display: 'flex', alignItems: 'center',
+            justifyContent: 'center',
+          }}>
+            <svg width="24" height="24" viewBox="0 0 18 18" fill="none">
+              <rect x="1" y="8" width="3.5" height="9" rx="1"
+                stroke="#7b93ff" strokeWidth="1.4" fill="none" />
+              <rect x="7.25" y="5" width="3.5" height="12" rx="1"
+                stroke="#7b93ff" strokeWidth="1.4" fill="none" />
+              <rect x="13.5" y="1" width="3.5" height="16" rx="1"
+                stroke="#7b93ff" strokeWidth="1.4" fill="none" />
+            </svg>
+          </div>
+          <div style={{ fontSize: 16, fontWeight: 700, color: '#4a5080', textAlign: 'center' }}>
+            Results dashboard
+          </div>
+          <div style={{ fontSize: 13, color: '#8b91b8', textAlign: 'center' }}>
+            Phase 6 — coming next
+          </div>
+          {activeScenarios.length > 0 && (
+            <div style={{
+              marginTop: 8, padding: '8px 18px',
+              background: 'rgba(123,147,255,.08)',
+              border: '1px solid rgba(123,147,255,.2)',
+              borderRadius: 100, fontSize: 13,
+              color: '#7b93ff', fontWeight: 600,
+            }}>
+              {activeScenarios.length} scenario{activeScenarios.length > 1 ? 's' : ''} active
+            </div>
+          )}
+        </div>
+
+      </div>
     </div>
-  );
+  )
+}
+// ── Screen enum ───────────────────────────────────────────────────
+const SCREEN = {
+  WELCOME:    'welcome',
+  RETURNING:  'returning',
+  ONBOARDING: 'onboarding',
+  HOME:       'home',
 }
 
-// ─── Screens enum ─────────────────────────────────────────────────
-const SCREEN = {
-  WELCOME:   'welcome',
-  RETURNING: 'returning',
-  ONBOARDING:'onboarding',
-  HOME:      'home',
-};
-
-// ─── App ──────────────────────────────────────────────────────────
+// ── App ───────────────────────────────────────────────────────────
 export default function App() {
+  const profileHook   = useProfile()
+  const scenariosHook = useScenarios()
+
   const {
-    profile,
-    updateProfile,
-    isLoggedIn,
-    loadDemoProfile,
-    completeOnboarding,
-    continueAsReturning,
-    signOut,
-    deleteData,
-  } = useProfile();
+    profile, updateProfile, isLoggedIn,
+    loadDemoProfile, completeOnboarding,
+    continueAsReturning, signOut, deleteData,
+  } = profileHook
 
-  const [screen, setScreen]           = useState(SCREEN.WELCOME);
-  const [noAccountFound, setNoAccount] = useState(false);
+  const [screen, setScreen]       = useState(SCREEN.WELCOME)
+  const [noAccountFound, setNoAccount] = useState(false)
 
-  // Once logged in always show home regardless of screen state
-  if (isLoggedIn) {
-    return <HomeDashboard profile={profile} onSignOut={handleSignOut} />;
-  }
-
-  // ── Handlers ──────────────────────────────────────────────────
-
-  function handleGetStarted() {
-    setScreen(SCREEN.ONBOARDING);
-  }
+  // ── Handlers ────────────────────────────────────────────────────
+  function handleGetStarted()        { setScreen(SCREEN.ONBOARDING) }
+  function handleBackToWelcome()     { setScreen(SCREEN.WELCOME) }
 
   function handleSignIn() {
-    const saved = storage.loadProfile();
+    const saved = storage.loadProfile()
     if (saved?.name) {
-      // Has a saved profile → show welcome back
-      setScreen(SCREEN.RETURNING);
+      setScreen(SCREEN.RETURNING)
     } else {
-      // No profile found → toast then redirect to form
-      setNoAccount(true);
-      setTimeout(() => {
-        setNoAccount(false);
-        setScreen(SCREEN.ONBOARDING);
-      }, 2200);
+      setNoAccount(true)
+      setTimeout(() => { setNoAccount(false); setScreen(SCREEN.ONBOARDING) }, 2200)
     }
   }
 
-  function handleUseDemo() {
-    loadDemoProfile(); // sets isLoggedIn = true → auto-renders HomeDashboard
-  }
-
-  function handleCompleteOnboarding() {
-    completeOnboarding(); // sets isLoggedIn = true → auto-renders HomeDashboard
-  }
-
-  function handleContinueReturning() {
-    continueAsReturning(); // sets isLoggedIn = true → auto-renders HomeDashboard
-  }
+  function handleUseDemo()           { loadDemoProfile() }
+  function handleCompleteOnboarding(){ completeOnboarding() }
+  function handleContinueReturning() { continueAsReturning() }
 
   function handleSignOut() {
-    signOut();
-    setScreen(SCREEN.WELCOME);
+    signOut()
+    scenariosHook.clearAll()
+    setScreen(SCREEN.WELCOME)
   }
 
   function handleDeleteData() {
-    deleteData();
-    setScreen(SCREEN.WELCOME);
+    deleteData()
+    scenariosHook.clearAll()
+    setScreen(SCREEN.WELCOME)
   }
 
-  function handleBackToWelcome() {
-    setScreen(SCREEN.WELCOME);
+  // ── Routing ─────────────────────────────────────────────────────
+  if (isLoggedIn) {
+    return (
+      <HomeDashboard
+        profile={profile}
+        scenarios={scenariosHook}
+        onSignOut={handleSignOut}
+      />
+    )
   }
-
-  // ── Routing ───────────────────────────────────────────────────
 
   if (screen === SCREEN.RETURNING) {
     return (
@@ -125,7 +220,7 @@ export default function App() {
         onDeleteData={handleDeleteData}
         onBackToWelcome={handleBackToWelcome}
       />
-    );
+    )
   }
 
   if (screen === SCREEN.ONBOARDING) {
@@ -136,20 +231,19 @@ export default function App() {
         onComplete={handleCompleteOnboarding}
         onUseDemo={handleUseDemo}
       />
-    );
+    )
   }
 
-  // Default — WELCOME (everyone starts here)
   return (
     <>
       {noAccountFound && (
         <div style={{
           position: 'fixed', bottom: 32, left: '50%',
           transform: 'translateX(-50%)',
-          background: '#0f1235', color: '#fff',
+          background: '#D9B991', color: '#0D0C00',
           padding: '12px 24px', borderRadius: 100,
-          fontSize: 13, fontWeight: 600,
-          boxShadow: '0 4px 20px rgba(0,0,0,.3)',
+          fontSize: 13, fontWeight: 700,
+          boxShadow: '0 4px 20px rgba(0,0,0,.4)',
           zIndex: 999, whiteSpace: 'nowrap',
         }}>
           No account found — redirecting to sign up...
@@ -161,5 +255,5 @@ export default function App() {
         onUseDemo={handleUseDemo}
       />
     </>
-  );
+  )
 }
