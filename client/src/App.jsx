@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useState } from 'react'
 import { useProfile } from './hooks/useProfile'
 import { useScenarios } from './hooks/useScenarios'
 import { storage } from './services/storage'
@@ -7,6 +7,7 @@ import { fetchVerdict } from './services/api'
 import WelcomeScreen from './components/onboarding/WelcomeScreen'
 import ProfileForm from './components/onboarding/ProfileForm'
 import ReturningUserCard from './components/onboarding/ReturningUserCard'
+import ProfileEditor from './components/onboarding/ProfileEditor'
 import ScenarioControls from './components/scenarios/ScenarioControls'
 import ResultsDashboard from './components/dashboard/ResultsDashboard'
 import DecisionMode from './components/decision/DecisionMode'
@@ -25,7 +26,6 @@ const C = {
 
 const APP_MODES = { STRESS: 'stress', DECISION: 'decision' }
 
-// ── Fallback verdict ───────────────────────────────────────────────
 function buildFallback(riskPercent, survivalMonths) {
   const months = Number(survivalMonths).toFixed(1)
   if (riskPercent > 60) return `With your current scenarios, your savings would last around ${months} months before hitting critical — that's a high-stress position. The single most impactful move right now is building an emergency buffer of at least 3 months of expenses.`
@@ -33,18 +33,23 @@ function buildFallback(riskPercent, survivalMonths) {
   return `You're in a solid position with ${months} months of runway — the selected scenarios don't pose an immediate threat. Keep building that buffer and you'll be well-prepared for most life shocks.`
 }
 
-// ── Home Dashboard ─────────────────────────────────────────────────
-function HomeDashboard({ profile, scenarios, onSignOut }) {
+function HomeDashboard({ profile, updateProfile, scenarios, onSignOut }) {
   const { activeScenarios, toggleScenario, updateScenarioParam, removeScenario, isActive } = scenarios
 
-  // Decision Intelligence has its own independent scenario state
-  const decisionScenarios = useScenarios()
+  const [appMode, setAppMode]               = useState(APP_MODES.STRESS)
+  const [results, setResults]               = useState(null)
+  const [verdict, setVerdict]               = useState(null)
+  const [verdictLoading, setLoading]        = useState(false)
+  const [hasRun, setHasRun]                 = useState(false)
+  const [editingProfile, setEditingProfile] = useState(false)
 
-  const [appMode, setAppMode]        = useState(APP_MODES.STRESS)
-  const [results, setResults]        = useState(null)
-  const [verdict, setVerdict]        = useState(null)
-  const [verdictLoading, setLoading] = useState(false)
-  const [hasRun, setHasRun]          = useState(false)
+  function handleSaveProfile(updated) {
+    updateProfile(updated)
+    setResults(null)
+    setVerdict(null)
+    setHasRun(false)
+    setEditingProfile(false)
+  }
 
   async function handleRun() {
     if (!profile || activeScenarios.length === 0) return
@@ -54,7 +59,8 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
     setVerdict(null)
     setLoading(true)
     const text = await fetchVerdict({
-      profile, activeScenarios,
+      profile,
+      activeScenarios,
       riskPercent: nextResults.riskPercent,
       survivalMonths: nextResults.survivalMonths,
     })
@@ -70,7 +76,7 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
       color: C.navy,
     }}>
 
-      {/* ── NAV ── */}
+      {/* NAV */}
       <nav style={{
         position: 'sticky', top: 0, zIndex: 20, height: 74,
         display: 'flex', alignItems: 'center', justifyContent: 'space-between',
@@ -78,12 +84,10 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
         backdropFilter: 'blur(18px)', WebkitBackdropFilter: 'blur(18px)',
         borderBottom: `1px solid ${C.navBorder}`,
       }}>
-        {/* Logo */}
         <div style={{ fontSize: 20, fontWeight: 800, letterSpacing: '-0.04em', color: C.navy }}>
           Life<span style={{ color: C.accent }}>Shock</span>
         </div>
 
-        {/* Mode toggle — plain text, color change only */}
         <div style={{ display: 'flex', gap: 28 }}>
           <button
             onClick={() => setAppMode(APP_MODES.STRESS)}
@@ -113,13 +117,17 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
           </button>
         </div>
 
-        {/* User + sign out */}
         <div style={{ display: 'flex', alignItems: 'center', gap: 14 }}>
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10,
-            padding: '6px 10px 6px 6px', borderRadius: 999,
-            background: 'rgba(255,255,255,0.76)', border: `1px solid ${C.borderSoft}`,
-          }}>
+          <div
+            onClick={() => setEditingProfile(true)}
+            style={{
+              display: 'flex', alignItems: 'center', gap: 10,
+              padding: '6px 10px 6px 6px', borderRadius: 999,
+              background: 'rgba(255,255,255,0.76)', border: `1px solid ${C.borderSoft}`,
+              cursor: 'pointer',
+            }}
+            title="Edit profile"
+          >
             <div style={{
               width: 30, height: 30, borderRadius: '50%',
               background: `linear-gradient(135deg, ${C.accentSoft}, rgba(255,255,255,0.96))`,
@@ -136,19 +144,26 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
             border: `1px solid ${C.border}`, background: '#FFFFFF',
             color: C.navy, fontFamily: 'inherit', fontSize: 13,
             fontWeight: 700, cursor: 'pointer',
-            boxShadow: '0 4px 14px rgba(17,28,68,0.04)',
           }}>
             Sign out
           </button>
         </div>
       </nav>
 
-      {/* ── STRESS TEST MODE ── */}
+      {/* Profile editor modal */}
+      {editingProfile && (
+        <ProfileEditor
+          profile={profile}
+          onSave={handleSaveProfile}
+          onClose={() => setEditingProfile(false)}
+        />
+      )}
+
+      {/* STRESS TEST */}
       {appMode === APP_MODES.STRESS && (
         <main style={{ padding: 18, height: 'calc(100vh - 74px)', boxSizing: 'border-box' }}>
           <div style={{ height: '100%', display: 'grid', gridTemplateColumns: '390px 1fr', gap: 18 }}>
 
-            {/* Left — Scenario Simulator */}
             <section style={{
               minHeight: 0, background: '#FFFFFF',
               border: `1px solid ${C.border}`, borderRadius: 30,
@@ -201,7 +216,6 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
               </div>
             </section>
 
-            {/* Right — Results */}
             <section style={{
               minHeight: 0,
               background: 'radial-gradient(circle at 18% 18%, rgba(123,147,255,0.08), transparent 22%), linear-gradient(180deg, #F9FAFF 0%, #F6F8FD 100%)',
@@ -220,17 +234,15 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
                 />
               </div>
             </section>
+
           </div>
         </main>
       )}
 
-      {/* ── DECISION INTELLIGENCE MODE ── */}
+      {/* DECISION INTELLIGENCE */}
       {appMode === APP_MODES.DECISION && (
-        <main style={{ padding: 24, maxWidth: 900, margin: '0 auto', boxSizing: 'border-box' }}>
-          <DecisionMode
-            profile={profile}
-            activeScenarios={decisionScenarios.activeScenarios}
-          />
+        <main style={{ padding: 24, maxWidth: 1100, margin: '0 auto', boxSizing: 'border-box' }}>
+          <DecisionMode profile={profile} />
         </main>
       )}
 
@@ -238,7 +250,6 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
   )
 }
 
-// ── Routing ────────────────────────────────────────────────────────
 const SCREEN = { WELCOME: 'welcome', RETURNING: 'returning', ONBOARDING: 'onboarding' }
 
 export default function App() {
@@ -261,9 +272,33 @@ export default function App() {
   function handleSignOut()   { signOut();   scenariosHook.clearAll(); setScreen(SCREEN.WELCOME) }
   function handleDeleteData(){ deleteData(); scenariosHook.clearAll(); setScreen(SCREEN.WELCOME) }
 
-  if (isLoggedIn) return <HomeDashboard profile={profile} scenarios={scenariosHook} onSignOut={handleSignOut} />
-  if (screen === SCREEN.RETURNING) return <ReturningUserCard profile={profile} onContinue={handleContinueReturning} onSignOut={handleSignOut} onDeleteData={handleDeleteData} onBackToWelcome={handleBackToWelcome} />
-  if (screen === SCREEN.ONBOARDING) return <ProfileForm profile={profile} onUpdate={updateProfile} onComplete={handleCompleteOnboarding} onUseDemo={handleUseDemo} />
+  if (isLoggedIn) return (
+    <HomeDashboard
+      profile={profile}
+      updateProfile={updateProfile}
+      scenarios={scenariosHook}
+      onSignOut={handleSignOut}
+    />
+  )
+
+  if (screen === SCREEN.RETURNING) return (
+    <ReturningUserCard
+      profile={profile}
+      onContinue={handleContinueReturning}
+      onSignOut={handleSignOut}
+      onDeleteData={handleDeleteData}
+      onBackToWelcome={handleBackToWelcome}
+    />
+  )
+
+  if (screen === SCREEN.ONBOARDING) return (
+    <ProfileForm
+      profile={profile}
+      onUpdate={updateProfile}
+      onComplete={handleCompleteOnboarding}
+      onUseDemo={handleUseDemo}
+    />
+  )
 
   return (
     <>
