@@ -124,7 +124,7 @@ export default function StatCards({ riskPercent = 0, survivalMonths = 0, monthly
         title="Monthly gap"
         value={gap}
         sub={monthlyGap < 0 ? 'shortfall per month' : 'surplus per month'}
-        tooltip="Your income minus your expenses and any new monthly costs from your active scenarios. A negative number means you're spending more than you earn each month."
+        tooltip="A positive number - you can cover everything and still have money leftover. A negative number - your bills are more than your income."
       />
 
     </div>
