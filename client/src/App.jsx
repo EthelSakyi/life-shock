@@ -43,28 +43,29 @@ function buildFallback(riskPercent, survivalMonths, profile) {
 function HomeDashboard({ profile, scenarios, onSignOut }) {
   const { activeScenarios, toggleScenario, updateScenarioParam, removeScenario, isActive } = scenarios
 
-  const [results, setResults] = useState(() => runSimulation(profile, []))
+  const [results, setResults] = useState(null)
   const [verdict, setVerdict]        = useState(null)
   const [verdictLoading, setLoading] = useState(false)
   const [hasRun, setHasRun]          = useState(false)
 
-  // Run simulation locally on every change — instant, no API
-  useEffect(() => {
-    if (!profile) return
-    setResults(runSimulation(profile, activeScenarios))
-    // Reset verdict when scenarios change so user knows to re-run
-    if (hasRun) setHasRun(false)
-  }, [profile, activeScenarios])
-
-  // Called by the Run button
+  // Called ONLY when user clicks Run
   async function handleRun() {
     if (!profile || activeScenarios.length === 0) return
-    const { riskPercent, survivalMonths } = runSimulation(profile, activeScenarios)
-    setLoading(true)
+
+    // 1. Run simulation and update dashboard immediately
+    const nextResults = runSimulation(profile, activeScenarios)
+    setResults(nextResults)
     setHasRun(true)
 
-    const text = await fetchVerdict({ profile, activeScenarios, riskPercent, survivalMonths })
-    setVerdict(text || buildFallback(riskPercent, survivalMonths, profile))
+    // 2. Then call Claude for verdict
+    setLoading(true)
+    const text = await fetchVerdict({
+      profile,
+      activeScenarios,
+      riskPercent: nextResults.riskPercent,
+      survivalMonths: nextResults.survivalMonths,
+    })
+    setVerdict(text || buildFallback(nextResults.riskPercent, nextResults.survivalMonths, profile))
     setLoading(false)
   }
 
@@ -200,6 +201,7 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
                 verdict={verdict}
                 verdictLoading={verdictLoading}
                 verdictError={false}
+                hasRun={hasRun}
               />
             </div>
           </section>
