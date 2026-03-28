@@ -10,12 +10,6 @@ const C = {
   text3: '#8b91b8',
 }
 
-const EMPLOYMENT_OPTIONS = [
-  { value: 'employed',  label: 'Employed'  },
-  { value: 'freelance', label: 'Freelance' },
-  { value: 'student',   label: 'Student'   },
-]
-
 export default function ProfileEditor({ profile, onSave, onClose }) {
   const [form, setForm] = useState({ ...profile })
 
@@ -92,34 +86,13 @@ export default function ProfileEditor({ profile, onSave, onClose }) {
 
         <Divider label="Savings & debt" />
 
-        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(0,1fr)', gap: 14 }}>
           <Section label="Savings balance">
             <MoneyInput value={form.savings} onChange={v => update('savings', v)} placeholder="18,000" />
           </Section>
           <Section label={<>Monthly debt <Opt /></>}>
             <MoneyInput value={form.debt} onChange={v => update('debt', v)} placeholder="250" suffix="/ mo" />
           </Section>
-        </div>
-
-        <Divider label="Employment type" />
-
-        <div style={{ display: 'flex', gap: 8, marginBottom: 28 }}>
-          {EMPLOYMENT_OPTIONS.map(opt => (
-            <button
-              key={opt.value}
-              onClick={() => update('employment', opt.value)}
-              style={{
-                flex: 1, padding: '11px 6px', borderRadius: 10,
-                border: `1.5px solid ${form.employment === opt.value ? navy : C.border}`,
-                background: form.employment === opt.value ? 'rgba(19,25,54,.07)' : C.surface,
-                color: form.employment === opt.value ? navy : C.text2,
-                fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
-                cursor: 'pointer', textAlign: 'center', transition: 'all .15s',
-              }}
-            >
-              {opt.label}
-            </button>
-          ))}
         </div>
 
         {/* Actions */}
@@ -217,8 +190,7 @@ function Opt() {
     <span style={{
       fontSize: 10, fontWeight: 500, color: C.text3,
       background: '#f3f4f8', padding: '2px 8px',
-      borderRadius: 10, border: `1px solid ${C.border}`,
-    }}>optional</span>
+    }}></span>
   )
 }
 

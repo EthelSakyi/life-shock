@@ -1,25 +1,17 @@
 import React, { useState } from 'react';
 
-const EMPLOYMENT_OPTIONS = [
-  { value: 'employed',  label: 'Employed'  },
-  { value: 'freelance', label: 'Freelance' },
-  { value: 'student',   label: 'Student'   },
-];
-
-// ── Color tokens ──
 const C = {
-  bg:         '#f8f9ff',
-  surface:    '#ffffff',
-  surface2:   '#f3f4f8',
-  border:     'rgba(19,25,54,.1)',
-  border2:    'rgba(19,25,54,.18)',
-  text:       '#0f1235',
-  text2:      '#4a5080',
-  text3:      '#8b91b8',
-  navy:       '#131936',
-  navyLt:     'rgba(19,25,54,.07)',
-  navyMd:     'rgba(19,25,54,.18)',
-  red:        '#dc2626',
+  bg:      '#f8f9ff',
+  surface: '#ffffff',
+  surface2:'#f3f4f8',
+  border:  'rgba(19,25,54,.1)',
+  border2: 'rgba(19,25,54,.18)',
+  text:    '#0f1235',
+  text2:   '#4a5080',
+  text3:   '#8b91b8',
+  navy:    '#131936',
+  navyLt:  'rgba(19,25,54,.07)',
+  red:     '#dc2626',
 };
 
 export default function ProfileForm({ profile, onUpdate, onComplete, onUseDemo }) {
@@ -66,7 +58,7 @@ export default function ProfileForm({ profile, onUpdate, onComplete, onUseDemo }
         <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 32 }}>
           <div style={{ width: 32, height: 4, borderRadius: 2, background: step >= 1 ? C.navy : C.border, transition: 'background .3s' }} />
           <div style={{ width: 32, height: 4, borderRadius: 2, background: step >= 2 ? C.navy : C.border, transition: 'background .3s' }} />
-          <span style={{ fontSize: 11, color: C.text3, marginLeft: 8, fontFamily: 'inherit', fontWeight: 500 }}>
+          <span style={{ fontSize: 11, color: C.text3, marginLeft: 8, fontWeight: 500 }}>
             Step {step} of 2
           </span>
         </div>
@@ -80,29 +72,18 @@ export default function ProfileForm({ profile, onUpdate, onComplete, onUseDemo }
             : 'The more accurate your numbers, the better your results.'}
         </p>
 
-        {/* ── STEP 1 ── */}
+        {/* STEP 1 */}
         {step === 1 && (
-          <>
-            <Field label="First name" error={errors.name}>
-              <TextInput
-                value={profile.name}
-                onChange={(v) => onUpdate({ name: v })}
-                placeholder="Alex"
-              />
-            </Field>
-
-            <Field label="Email address" tag="optional">
-              <TextInput
-                type="email"
-                value={profile.email}
-                onChange={(v) => onUpdate({ email: v })}
-                placeholder="your@email.com"
-              />
-            </Field>
-          </>
+          <Field label="First name" error={errors.name}>
+            <TextInput
+              value={profile.name}
+              onChange={(v) => onUpdate({ name: v })}
+              placeholder="Alex"
+            />
+          </Field>
         )}
 
-        {/* ── STEP 2 ── */}
+        {/* STEP 2 */}
         {step === 2 && (
           <>
             <SectionHead>Income &amp; expenses</SectionHead>
@@ -143,7 +124,7 @@ export default function ProfileForm({ profile, onUpdate, onComplete, onUseDemo }
                   placeholder="18,000"
                 />
               </Field>
-              <Field label="Monthly debt" tag="optional" hint="Total monthly debt payments">
+              <Field label="Monthly debt" hint="Total monthly debt payments">
                 <MoneyInput
                   value={profile.debt}
                   onChange={(v) => onUpdate({ debt: v })}
@@ -152,31 +133,10 @@ export default function ProfileForm({ profile, onUpdate, onComplete, onUseDemo }
                 />
               </Field>
             </div>
-
-            <SectionHead>Employment type</SectionHead>
-
-            <div style={{ display: 'flex', gap: 8, marginBottom: 4 }}>
-              {EMPLOYMENT_OPTIONS.map((opt) => (
-                <button
-                  key={opt.value}
-                  onClick={() => onUpdate({ employment: opt.value })}
-                  style={{
-                    flex: 1, padding: '11px 6px', borderRadius: 10,
-                    border: `1.5px solid ${profile.employment === opt.value ? C.navy : C.border}`,
-                    background: profile.employment === opt.value ? C.navyLt : C.surface,
-                    color: profile.employment === opt.value ? C.navy : C.text2,
-                    fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
-                    cursor: 'pointer', textAlign: 'center', transition: 'all .15s',
-                  }}
-                >
-                  {opt.label}
-                </button>
-              ))}
-            </div>
           </>
         )}
 
-        {/* ── Actions ── */}
+        {/* Actions */}
         <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 10 }}>
           {step === 1 ? (
             <button onClick={handleNext} style={btnPrimary}>Continue →</button>
@@ -201,8 +161,6 @@ export default function ProfileForm({ profile, onUpdate, onComplete, onUseDemo }
   );
 }
 
-// ── Sub-components ─────────────────────────────────────────────────
-
 function Field({ label, tag, hint, error, children }) {
   return (
     <div style={{ marginBottom: 16 }}>
@@ -210,11 +168,7 @@ function Field({ label, tag, hint, error, children }) {
         {label}
         {tag && <OptTag />}
       </div>
-      {hint && (
-        <div style={{ fontSize: 11, color: C.text3, marginBottom: 6, lineHeight: 1.45 }}>
-          {hint}
-        </div>
-      )}
+      {hint && <div style={{ fontSize: 11, color: C.text3, marginBottom: 6, lineHeight: 1.45 }}>{hint}</div>}
       {children}
       {error && <div style={{ fontSize: 11, color: C.red, marginTop: 4 }}>{error}</div>}
     </div>
@@ -234,11 +188,11 @@ function SectionHead({ children }) {
   );
 }
 
-function TextInput({ value, onChange, placeholder, type = 'text' }) {
+function TextInput({ value, onChange, placeholder }) {
   return (
     <div style={inputWrap}>
       <input
-        type={type}
+        type="text"
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -253,8 +207,7 @@ function MoneyInput({ value, onChange, placeholder, suffix }) {
     <div style={{ ...inputWrap, minWidth: 0 }}>
       <div style={prefixStyle}>$</div>
       <input
-        type="number"
-        min="0"
+        type="number" min="0"
         value={value || ''}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
@@ -271,9 +224,7 @@ function OptTag() {
       fontSize: 10, fontWeight: 500, color: C.text3,
       background: C.surface2, padding: '2px 8px',
       borderRadius: 10, border: `1px solid ${C.border}`,
-    }}>
-      optional
-    </span>
+    }}>optional</span>
   );
 }
 
@@ -286,47 +237,37 @@ function LockIcon() {
   );
 }
 
-// ── Styles ────────────────────────────────────────────────────────
-
 const card = {
-  background: C.surface,
-  border: `1px solid ${C.border}`,
-  borderRadius: 20,
-  padding: '48px 52px',
-  width: '100%',
-  maxWidth: 600,           // wider than before (was 520)
+  background: C.surface, border: `1px solid ${C.border}`,
+  borderRadius: 20, padding: '48px 52px',
+  width: '100%', maxWidth: 600,
   boxShadow: '0 4px 24px rgba(19,25,54,.08), 0 1px 4px rgba(19,25,54,.05)',
 };
 
 const inputWrap = {
   display: 'flex', alignItems: 'center',
-  background: C.surface2,
-  border: `1.5px solid ${C.border}`,
-  borderRadius: 10, height: 46,
-  overflow: 'hidden', width: '100%',
-  transition: 'border-color .15s',
+  background: C.surface2, border: `1.5px solid ${C.border}`,
+  borderRadius: 10, height: 46, overflow: 'hidden', width: '100%',
 };
 
 const inputStyle = {
   flex: 1, background: 'transparent', border: 'none', outline: 'none',
   padding: '0 14px', fontSize: 14,
-  fontFamily: "'Plus Jakarta Sans', sans-serif",  // matches app font, not monospace
+  fontFamily: "'Plus Jakarta Sans', sans-serif",
   color: C.text, height: '100%', fontWeight: 500,
 };
 
 const prefixStyle = {
   padding: '0 13px', fontSize: 14, color: C.text3,
   borderRight: `1px solid ${C.border}`, height: '100%',
-  display: 'flex', alignItems: 'center',
-  background: '#eef0f7',
+  display: 'flex', alignItems: 'center', background: '#eef0f7',
   fontFamily: "'Plus Jakarta Sans', sans-serif",
   flexShrink: 0, fontWeight: 600,
 };
 
 const suffixStyle = {
-  padding: '0 13px', fontSize: 12,
-  color: C.text3, flexShrink: 0,
-  fontFamily: "'Plus Jakarta Sans', sans-serif",
+  padding: '0 13px', fontSize: 12, color: C.text3,
+  flexShrink: 0, fontFamily: "'Plus Jakarta Sans', sans-serif",
 };
 
 const btnPrimary = {
@@ -334,13 +275,11 @@ const btnPrimary = {
   fontSize: 15, fontWeight: 700, fontFamily: 'inherit',
   cursor: 'pointer', background: C.navy, color: '#fff',
   border: 'none', boxShadow: '0 2px 12px rgba(19,25,54,.2)',
-  transition: 'all .15s',
 };
 
 const btnGhost = {
   width: '100%', padding: 14, borderRadius: 100,
   fontSize: 13, fontWeight: 600, fontFamily: 'inherit',
   cursor: 'pointer', background: 'transparent',
-  border: `1.5px solid ${C.border2}`,
-  color: C.text2, transition: 'all .15s',
+  border: `1.5px solid ${C.border2}`, color: C.text2,
 };

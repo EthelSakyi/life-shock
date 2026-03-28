@@ -1,9 +1,39 @@
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { runSimulation } from '../../engine/monteCarlo'
 import { fetchSaferVerdict } from '../../services/api'
 
 const navy = '#131936'
 const C = { border: 'rgba(17,28,68,.08)', text3: '#8591b4' }
+
+function InfoButton({ text }) {
+  const [show, setShow] = useState(false)
+  return (
+    <div style={{ position: 'relative', display: 'inline-flex' }}>
+      <div
+        onMouseEnter={() => setShow(true)}
+        onMouseLeave={() => setShow(false)}
+        style={{
+          width: 18, height: 18, borderRadius: '50%',
+          background: 'rgba(19,25,54,.1)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          cursor: 'help', fontSize: 11, fontWeight: 700, color: navy, flexShrink: 0,
+        }}
+      >i</div>
+      {show && (
+        <div style={{
+          position: 'absolute', top: 24, right: 0,
+          background: 'rgba(255,255,255,.95)', backdropFilter: 'blur(16px)',
+          WebkitBackdropFilter: 'blur(16px)', color: navy,
+          fontSize: 12, lineHeight: 1.65, padding: '10px 14px',
+          borderRadius: 10, width: 220, zIndex: 50,
+          border: '1px solid rgba(19,25,54,.12)',
+          boxShadow: '0 8px 24px rgba(19,25,54,.15)',
+          pointerEvents: 'none',
+        }}>{text}</div>
+      )}
+    </div>
+  )
+}
 
 function LoadingDots() {
   return (
@@ -56,13 +86,18 @@ function buildFallback(gap, target, monthsAt200, monthsAt500) {
   return `You need $${gap.toLocaleString()} more in savings to get your risk below 20% under these scenarios. Saving $500/month gets you there in ${monthsAt500} months, or $200/month in ${monthsAt200} months.`
 }
 
-export default function MakeMeSafer({ profile, activeScenarios, currentRiskPercent, currentSurvivalMonths }) {
+export default function MakeMeSafer({ profile, activeScenarios, currentRiskPercent, currentSurvivalMonths, autoRun }) {
   const [result, setResult]   = useState(null)
   const [verdict, setVerdict] = useState(null)
   const [loading, setLoading] = useState(false)
   const [ran, setRan]         = useState(false)
 
   const currentSavings = Number(profile?.savings) || 0
+
+  // Auto-run on mount if requested
+  useEffect(() => {
+    if (autoRun) handleCalculate()
+  }, [])
 
   async function handleCalculate() {
     setLoading(true)
@@ -131,9 +166,12 @@ export default function MakeMeSafer({ profile, activeScenarios, currentRiskPerce
             </div>
           ) : (
             <>
-              <p style={{ margin: '0 0 4px', fontSize: 13, fontWeight: 700, color: navy }}>
-                Savings target to get below 20% risk
-              </p>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 4 }}>
+                <p style={{ margin: 0, fontSize: 13, fontWeight: 700, color: navy }}>
+                  Savings target to get below 20% risk
+                </p>
+                <InfoButton text="We run the same scenarios but keep adding $500 to your savings until your risk drops below 20%. This is that exact number." />
+              </div>
               <p style={{ margin: '0 0 14px', fontSize: 12, color: navy, opacity: .4 }}>
                 With your active scenarios applied
               </p>
