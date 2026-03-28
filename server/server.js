@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import verdictRouter from './routes/verdict.js';
+import decisionRouter from './routes/decision.js';
 
 dotenv.config();
 
@@ -19,6 +21,10 @@ app.get("/api/health", (req, res) => {
   console.log("Health route hit");
   res.json({ status: "ok" });
 });
+
+app.use('/api/verdict', verdictRouter);
+app.use('/api/decision', decisionRouter);
+
 
 app.listen(PORT, () => {
   console.log(`Server running on port ${PORT}`);
