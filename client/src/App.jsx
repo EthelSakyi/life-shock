@@ -236,6 +236,10 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
               <ResultsDashboard
                 results={results}
                 activeScenarios={activeScenarios}
+                profile={profile}
+                verdict={null}
+                verdictLoading={false}
+                verdictError={false}
               />
             </div>
           </section>
