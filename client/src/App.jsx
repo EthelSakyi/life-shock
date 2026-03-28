@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useCallback } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useProfile } from './hooks/useProfile'
 import { useScenarios } from './hooks/useScenarios'
 import { storage } from './services/storage'
@@ -25,16 +25,6 @@ const C = {
   navBorder: 'rgba(17,28,68,0.06)',
 }
 
-// ── Debounce hook ──────────────────────────────────────────────────
-function useDebounce(value, delay) {
-  const [debounced, setDebounced] = useState(value)
-  useEffect(() => {
-    const t = setTimeout(() => setDebounced(value), delay)
-    return () => clearTimeout(t)
-  }, [value, delay])
-  return debounced
-}
-
 // ── Fallback verdict copy ──────────────────────────────────────────
 function buildFallback(riskPercent, survivalMonths, profile) {
   if (riskPercent === 0) return null // no scenarios yet
@@ -54,56 +44,29 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
   const { activeScenarios, toggleScenario, updateScenarioParam, removeScenario, isActive } = scenarios
 
   const [results, setResults] = useState(() => runSimulation(profile, []))
-  const [verdict, setVerdict]           = useState(null)
-  const [verdictLoading, setLoading]    = useState(false)
-  const [verdictError, setError]        = useState(false)
+  const [verdict, setVerdict]        = useState(null)
+  const [verdictLoading, setLoading] = useState(false)
+  const [hasRun, setHasRun]          = useState(false)
 
-  // Debounce activeScenarios by 800ms so we don't call API on every slider tick
-  const debouncedScenarios = useDebounce(activeScenarios, 800)
-
-  // Run simulation immediately on every change (fast, local)
+  // Run simulation locally on every change — instant, no API
   useEffect(() => {
     if (!profile) return
     setResults(runSimulation(profile, activeScenarios))
+    // Reset verdict when scenarios change so user knows to re-run
+    if (hasRun) setHasRun(false)
   }, [profile, activeScenarios])
 
-  // Call Claude API on debounced scenarios only
-  useEffect(() => {
-    if (!profile) return
-
-    const { riskPercent, survivalMonths } = runSimulation(profile, debouncedScenarios)
-
-    // Don't call API if no scenarios selected
-    if (debouncedScenarios.length === 0) {
-      setVerdict(null)
-      setLoading(false)
-      return
-    }
-
-    let cancelled = false
+  // Called by the Run button
+  async function handleRun() {
+    if (!profile || activeScenarios.length === 0) return
+    const { riskPercent, survivalMonths } = runSimulation(profile, activeScenarios)
     setLoading(true)
-    setError(false)
+    setHasRun(true)
 
-    fetchVerdict({ profile, activeScenarios: debouncedScenarios, riskPercent, survivalMonths })
-      .then((text) => {
-        if (cancelled) return
-        if (text) {
-          setVerdict(text)
-        } else {
-          // API returned null — use fallback silently
-          setVerdict(buildFallback(riskPercent, survivalMonths, profile))
-        }
-        setLoading(false)
-      })
-      .catch(() => {
-        if (cancelled) return
-        setVerdict(buildFallback(riskPercent, survivalMonths, profile))
-        setLoading(false)
-        setError(false) // never show error to user
-      })
-
-    return () => { cancelled = true }
-  }, [profile, debouncedScenarios])
+    const text = await fetchVerdict({ profile, activeScenarios, riskPercent, survivalMonths })
+    setVerdict(text || buildFallback(riskPercent, survivalMonths, profile))
+    setLoading(false)
+  }
 
   return (
     <div style={{
@@ -187,6 +150,36 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
                 isActive={isActive}
               />
             </div>
+
+            {/* Run button — pinned to bottom of left panel */}
+            <div style={{ padding: '14px 16px', borderTop: '1px solid rgba(17,28,68,.06)' }}>
+              <button
+                onClick={handleRun}
+                disabled={verdictLoading || activeScenarios.length === 0}
+                style={{
+                  width: '100%', padding: '14px 0', borderRadius: 100,
+                  fontSize: 15, fontWeight: 700, fontFamily: 'inherit',
+                  cursor: activeScenarios.length === 0 ? 'not-allowed' : 'pointer',
+                  background: activeScenarios.length === 0 ? 'rgba(19,25,54,.12)' : '#131936',
+                  color: activeScenarios.length === 0 ? 'rgba(19,25,54,.35)' : '#fff',
+                  border: 'none',
+                  opacity: verdictLoading ? 0.7 : 1,
+                  transition: 'all .2s',
+                  boxShadow: activeScenarios.length === 0 ? 'none' : '0 4px 16px rgba(19,25,54,.2)',
+                }}
+              >
+                {verdictLoading
+                  ? '⏳ Getting verdict...'
+                  : hasRun
+                  ? '↻ Re-run simulation'
+                  : '▶ Run simulation'}
+              </button>
+              {activeScenarios.length === 0 && (
+                <p style={{ margin: '8px 0 0', fontSize: 12, color: '#8591b4', textAlign: 'center' }}>
+                  Select a scenario to run
+                </p>
+              )}
+            </div>
           </section>
 
           {/* Right — Results Dashboard */}
@@ -206,7 +199,7 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
                 profile={profile}
                 verdict={verdict}
                 verdictLoading={verdictLoading}
-                verdictError={verdictError}
+                verdictError={false}
               />
             </div>
           </section>
