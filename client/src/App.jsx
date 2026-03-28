@@ -37,6 +37,9 @@ function buildFallback(riskPercent, survivalMonths) {
 function HomeDashboard({ profile, scenarios, onSignOut }) {
   const { activeScenarios, toggleScenario, updateScenarioParam, removeScenario, isActive } = scenarios
 
+  // Decision Intelligence has its own independent scenario state
+  const decisionScenarios = useScenarios()
+
   const [appMode, setAppMode]        = useState(APP_MODES.STRESS)
   const [results, setResults]        = useState(null)
   const [verdict, setVerdict]        = useState(null)
@@ -226,7 +229,7 @@ function HomeDashboard({ profile, scenarios, onSignOut }) {
         <main style={{ padding: 24, maxWidth: 900, margin: '0 auto', boxSizing: 'border-box' }}>
           <DecisionMode
             profile={profile}
-            activeScenarios={activeScenarios}
+            activeScenarios={decisionScenarios.activeScenarios}
           />
         </main>
       )}

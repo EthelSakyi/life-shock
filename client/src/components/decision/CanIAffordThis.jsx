@@ -71,13 +71,14 @@ export default function CanIAffordThis({ profile, activeScenarios }) {
     setVerdict(null)
     setChecked(true)
 
-    // Run simulation before and after
-    const before = runSimulation(profile, activeScenarios)
+    // Run simulation before and after — works with zero active scenarios
+    const scenariosToUse = activeScenarios || []
+    const before = runSimulation(profile, scenariosToUse)
     const modifiedProfile = {
       ...profile,
       savings: Math.max(0, Number(profile.savings) - costNum),
     }
-    const after = runSimulation(modifiedProfile, activeScenarios)
+    const after = runSimulation(modifiedProfile, scenariosToUse)
 
     setResult({ before, after, cost: costNum })
 

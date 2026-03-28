@@ -42,7 +42,7 @@ function getRiskTheme(p) {
 }
 
 // Reverse calculation — increment savings by $500 until risk < 20%
-function calcSavingsTarget(profile, activeScenarios, targetRisk = 20) {
+function calcSavingsTarget(profile, activeScenarios = [], targetRisk = 20) {
   const current = runSimulation(profile, activeScenarios)
   if (current.riskPercent <= targetRisk) return { target: Number(profile.savings), gap: 0, current }
 
@@ -87,7 +87,9 @@ export default function MakeMeSafer({ profile, activeScenarios }) {
     setVerdict(null)
     setRan(true)
 
-    const calc = calcSavingsTarget(profile, activeScenarios, 20)
+    // Works with zero active scenarios — uses profile only
+    const scenariosToUse = activeScenarios || []
+    const calc = calcSavingsTarget(profile, scenariosToUse, 20)
     setResult(calc)
 
     const text = await fetchSaferVerdict({
